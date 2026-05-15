@@ -1,0 +1,35 @@
+# Node / Bun
+node_modules
+.nuxt
+.output
+.data
+dist
+*.log
+.bun
+bun.lockb
+
+# Tauri
+src-tauri/target
+src-tauri/gen
+src-tauri/Cargo.lock
+
+# Local projects and generated audio (kept out of the repo)
+projects/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
