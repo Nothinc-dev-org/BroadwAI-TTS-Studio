@@ -5,14 +5,20 @@ const props = defineProps<{
   dialogues: DialogueNode[]
   characters: Character[]
   audiosByNode?: Record<string, GeneratedAudio>
+  selectedDialogueIds?: string[]
 }>()
 
 defineEmits<{
   audioGenerated: [audio: GeneratedAudio]
+  toggleDialogueSelection: [dialogueId: string]
 }>()
 
 function audioFor(nodeId: string): GeneratedAudio | null {
   return props.audiosByNode?.[nodeId] ?? null
+}
+
+function isSelected(nodeId: string): boolean {
+  return props.selectedDialogueIds?.includes(nodeId) ?? false
 }
 </script>
 
@@ -26,7 +32,9 @@ function audioFor(nodeId: string): GeneratedAudio | null {
         :dialogue="dialogue"
         :characters="characters"
         :audio="audioFor(dialogue.id)"
+        :selected="isSelected(dialogue.id)"
         @generated="(audio: GeneratedAudio) => $emit('audioGenerated', audio)"
+        @toggle-selected="$emit('toggleDialogueSelection', dialogue.id)"
       />
     </li>
   </ol>

@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { save as saveDialog } from '@tauri-apps/plugin-dialog'
-import type { Scene } from '~/types/domain'
+import type { DialogueNode, GeneratedAudio, Scene } from '~/types/domain'
 
-const props = defineProps<{ scene: Scene }>()
+const props = defineProps<{
+  scene: Scene
+  selectedDialogues?: DialogueNode[]
+}>()
+
+const emit = defineEmits<{
+  audioGenerated: [audio: GeneratedAudio]
+}>()
 
 const tts = useTts()
 const timeline = useTimeline()
 
 const generating = ref(false)
 const playing = ref(false)
+const playingSelection = ref(false)
 const exporting = ref(false)
 const optimizing = ref(false)
 const status = ref<string | null>(null)
@@ -17,7 +25,10 @@ const error = ref<string | null>(null)
 
 const mixSrc = ref<string | null>(null)
 const audioRef = ref<HTMLAudioElement | null>(null)
+const selectionAudioRef = ref<HTMLAudioElement | null>(null)
 const isAudioPlaying = ref(false)
+const selectionSrc = ref<string | null>(null)
+let selectionObjectUrl: string | null = null
 
 function formatDuration(ms: number): string {
   const total = Math.round(ms / 1000)
@@ -62,6 +73,59 @@ async function playAll() {
   finally {
     playing.value = false
   }
+}
+
+async function playSelection() {
+  if (!props.selectedDialogues?.length) return
+  playingSelection.value = true
+  error.value = null
+  status.value = null
+  try {
+    let completed = 0
+    for (const dialogue of props.selectedDialogues) {
+      if (!playingSelection.value) break
+      status.value = `Reproduciendo selección ${completed + 1}/${props.selectedDialogues.length}`
+      const audio = await tts.playDialogue(dialogue.id)
+      emit('audioGenerated', audio)
+      const bytes = await tts.generatedAudioBytes(audio.id)
+      await playAudioBytes(bytes)
+      completed += 1
+    }
+    if (completed === props.selectedDialogues.length) {
+      status.value = `Selección reproducida: ${completed} bloque(s)`
+    }
+  }
+  catch (err) {
+    error.value = String(err)
+  }
+  finally {
+    playingSelection.value = false
+    revokeSelectionBlob()
+  }
+}
+
+async function playAudioBytes(bytes: number[]) {
+  revokeSelectionBlob()
+  selectionObjectUrl = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: 'audio/wav' }))
+  selectionSrc.value = selectionObjectUrl
+  await nextTick()
+  const el = selectionAudioRef.value
+  if (!el) return
+  el.currentTime = 0
+  el.load()
+  await new Promise<void>((resolve, reject) => {
+    el.onended = () => resolve()
+    el.onerror = () => reject(new Error('No se pudo reproducir un bloque seleccionado'))
+    void el.play().catch(reject)
+  })
+}
+
+function revokeSelectionBlob() {
+  if (selectionObjectUrl) {
+    URL.revokeObjectURL(selectionObjectUrl)
+  }
+  selectionObjectUrl = null
+  selectionSrc.value = null
 }
 
 async function optimizeTags() {
@@ -109,6 +173,8 @@ function togglePlayback() {
   if (isAudioPlaying.value) audioRef.value.pause()
   else void audioRef.value.play()
 }
+
+onBeforeUnmount(revokeSelectionBlob)
 </script>
 
 <template>
@@ -141,16 +207,26 @@ function togglePlayback() {
         <UButton
           icon="i-lucide-play"
           :loading="playing"
-          :disabled="generating || exporting"
+          :disabled="generating || playingSelection || exporting"
           @click="playAll"
         >
           Play global
         </UButton>
         <UButton
+          v-if="selectedDialogues?.length"
+          variant="soft"
+          icon="i-lucide-list-video"
+          :loading="playingSelection"
+          :disabled="generating || playing || exporting || optimizing"
+          @click="playSelection"
+        >
+          Reproducir Selección ({{ selectedDialogues.length }})
+        </UButton>
+        <UButton
           variant="ghost"
           icon="i-lucide-download"
           :loading="exporting"
-          :disabled="generating || playing"
+          :disabled="generating || playing || playingSelection"
           @click="exportMix"
         >
           Exportar
@@ -179,5 +255,6 @@ function togglePlayback() {
 
     <p v-if="status" class="text-xs text-success">{{ status }}</p>
     <p v-if="error" class="text-xs text-error">{{ error }}</p>
+    <audio v-if="selectionSrc" ref="selectionAudioRef" :src="selectionSrc" preload="none" />
   </div>
 </template>

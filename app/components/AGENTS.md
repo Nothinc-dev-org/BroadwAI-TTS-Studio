@@ -37,9 +37,9 @@ fichero, no del path.
 3. **Eventos `imported`, `created`, `audioGenerated`, etc.** son emit-only
    para que el padre recargue su estado. Los componentes no tocan estado
    global.
-4. **Reproducir audio local:** importar `convertFileSrc` de
-   `@tauri-apps/api/core` y aplicarlo al `file_path` antes de
-   pasárselo a `<audio :src>`. No leas bytes vía IPC para reproducir.
+4. **Reproducir audio generado local:** si el WebView rechaza `asset://`, leer
+   los bytes vía composable Tauri y crear un `blob:` URL, revocándolo al cambiar
+   de audio o desmontar el componente.
 
 ## Lista de componentes y su estado
 
@@ -53,7 +53,7 @@ fichero, no del path.
 | `SceneToolbar`          | 11.6        | ✅ generar/play global/exportar WAV/optimizar TTS |
 | `SceneEditor`           | 11.6        | ✅ orquesta `DialogueList` + propaga audio |
 | `DialogueList`          | 11.6        | ✅ pasa `audiosByNode` por nodo |
-| `DialogueBlock`         | 11.6        | ✅ play (auto-genera), regenerar, badge de estado (RF-31), `<audio>` con `convertFileSrc` |
+| `DialogueBlock`         | 11.6        | ✅ play (auto-genera), regenerar, badge de estado (RF-31), `<audio>` con `blob:` |
 | `CharacterPanel`        | 11.3 / 11.6 | ✅ list + compact |
 | `CharacterEditor`       | 11.7        | 🟦 formulario, submit no cableado al backend |
 | `VoiceSelector`         | 11.7        | ✅     |

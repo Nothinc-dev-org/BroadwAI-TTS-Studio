@@ -5,10 +5,12 @@ const props = defineProps<{
   dialogue: DialogueNode
   characters: Character[]
   audio?: GeneratedAudio | null
+  selected?: boolean
 }>()
 
 const emit = defineEmits<{
   generated: [audio: GeneratedAudio]
+  toggleSelected: []
 }>()
 
 const tts = useTts()
@@ -153,11 +155,23 @@ function onAudioError() {
   lastError.value = `No se pudo cargar el audio generado. Código: ${code}. ${message}. URL: ${audio?.currentSrc || audioSrc.value || 'desconocida'}`
 }
 
+function onBlockClick(event: MouseEvent) {
+  if (!event.ctrlKey) return
+  const target = event.target as HTMLElement | null
+  if (target?.closest('button,a,audio')) return
+  event.preventDefault()
+  emit('toggleSelected')
+}
+
 onBeforeUnmount(revokeAudioBlob)
 </script>
 
 <template>
-  <article class="rounded-lg border border-default bg-elevated p-3">
+  <article
+    class="rounded-lg border bg-elevated p-3 transition"
+    :class="selected ? 'border-primary ring-2 ring-primary/30' : 'border-default'"
+    @click="onBlockClick"
+  >
     <header class="mb-2 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2 text-sm">
         <UBadge color="neutral" variant="subtle">{{ kindLabel[dialogue.type] ?? dialogue.type }}</UBadge>

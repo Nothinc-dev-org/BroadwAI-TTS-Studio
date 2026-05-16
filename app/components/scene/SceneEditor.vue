@@ -6,10 +6,12 @@ defineProps<{
   dialogues: DialogueNode[]
   characters: Character[]
   audiosByNode?: Record<string, GeneratedAudio>
+  selectedDialogueIds?: string[]
 }>()
 
 defineEmits<{
   audioGenerated: [audio: GeneratedAudio]
+  toggleDialogueSelection: [dialogueId: string]
 }>()
 </script>
 
@@ -26,7 +28,9 @@ defineEmits<{
       :dialogues="dialogues"
       :characters="characters"
       :audios-by-node="audiosByNode"
+      :selected-dialogue-ids="selectedDialogueIds"
       @audio-generated="(audio: GeneratedAudio) => $emit('audioGenerated', audio)"
+      @toggle-dialogue-selection="(dialogueId: string) => $emit('toggleDialogueSelection', dialogueId)"
     />
   </section>
 </template>
