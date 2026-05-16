@@ -17,18 +17,17 @@ pub struct CreateProjectInput {
     pub root_path: PathBuf,
 }
 
-pub async fn create(db: &DatabaseConnection, input: CreateProjectInput) -> AppResult<project::Model> {
+pub async fn create(
+    db: &DatabaseConnection,
+    input: CreateProjectInput,
+) -> AppResult<project::Model> {
     let now_ts = now();
     let model = project::ActiveModel {
         id: Set(new_id()),
         title: Set(input.title),
         description: Set(input.description),
         language: Set(input.language.unwrap_or_else(|| "es-MX".into())),
-        root_path: Set(input
-            .root_path
-            .to_str()
-            .unwrap_or_default()
-            .to_string()),
+        root_path: Set(input.root_path.to_str().unwrap_or_default().to_string()),
         created_at: Set(now_ts.clone()),
         updated_at: Set(now_ts),
     };

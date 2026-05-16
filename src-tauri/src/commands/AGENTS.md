@@ -20,17 +20,17 @@ Ver `docs/decisions/0007-commands-thin-services-stateless.md`.
 
 ## Mapa de módulos
 
-| Archivo          | Dominio                          | Servicios usados                  |
-| ---------------- | -------------------------------- | --------------------------------- |
-| `project.rs`     | Proyectos (RF-01, 02, 39, 40)    | `project_service`                 |
-| `scene.rs`       | Escenas (RF-04, 05)              | `scene_service`                   |
-| `character.rs`   | Personajes y alias (RF-06–08, 23)| `character_service`               |
-| `dialogue.rs`    | Bloques narrativos (RF-17–21)    | `dialogue_service`                |
-| `import.rs`      | Copy-paste / archivo (RF-09–16)  | `import_service` (+ `deepseek_service` cuando se implemente) |
-| `tts.rs`         | Generación y play (RF-24–27)     | `gemini_tts_service` + `render_planner` |
-| `timeline.rs`    | Pistas y eventos (RF-34–37)      | (pendiente)                       |
-| `assets.rs`      | Biblioteca de audio (RF-32, 33)  | `asset_service`                   |
-| `settings.rs`    | API keys y preferencias (RF-03)  | `credential_service`              |
+| Archivo        | Dominio                              | Servicios usados                                             |
+| -------------- | ------------------------------------ | ------------------------------------------------------------ |
+| `project.rs`   | Proyectos (RF-01, 02, 39, 40)        | `project_service`, `project_io_service`                      |
+| `scene.rs`     | Escenas (RF-04, 05)                  | `scene_service`                                              |
+| `character.rs` | Personajes y alias (RF-06–08, 23)    | `character_service`                                          |
+| `dialogue.rs`  | Bloques narrativos (RF-17–21)        | `dialogue_service`                                           |
+| `import.rs`    | Copy-paste / archivo (RF-09–16)      | `import_service` (que a su vez orquesta `deepseek_service`)  |
+| `tts.rs`       | Generación, play, bytes de audio, muestras y optimización TTS | `tts_service`, `scene_mix_service`, `tts_optimization_service` |
+| `timeline.rs`  | Pistas, eventos y render (RF-34–37)  | `timeline_service`, `scene_mix_service`                      |
+| `assets.rs`    | Biblioteca de audio (RF-32, 33)      | `asset_service`                                              |
+| `settings.rs`  | API keys y preferencias (RF-03)      | `credential_service`                                         |
 
 ## Reglas de oro
 
@@ -54,6 +54,10 @@ Ver `docs/decisions/0007-commands-thin-services-stateless.md`.
 
 ## Estado actual
 
-~50 comandos registrados. ~15 funcionales (la base de MVP 1). ~35 devuelven
-`AppError::NotImplemented` con la firma final lista. La implementación se
-hace módulo a módulo según el roadmap (`docs/architecture.md` §7).
+MVP 1 cerrado. Todos los comandos relevantes para el roadmap están
+cableados a sus servicios. Los stubs que quedan (`update_scene`,
+`update_character`, `split_dialogue_node`, `merge_dialogue_nodes`,
+`delete_project`, `generate_scene_audio`, `play_scene_audio` y otros del
+módulo `dialogue.rs`/`scene.rs`/`character.rs`) corresponden a CRUD
+ampliado del editor visual y a la deuda post-MVP listada en
+`docs/architecture.md` §7.

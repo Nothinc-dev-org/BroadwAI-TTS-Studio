@@ -21,6 +21,35 @@ export interface Scene {
   updated_at: string
 }
 
+export interface StructuredCharacter {
+  name: string
+  role: string
+  aliases: string[]
+  description: string | null
+}
+
+export interface StructuredDialogue {
+  speaker: string
+  type: string
+  tts_tags: string[]
+  text: string
+  original_excerpt: string | null
+}
+
+export interface StructuredScene {
+  title: string
+  description: string | null
+  language: string
+  characters: StructuredCharacter[]
+  dialogues: StructuredDialogue[]
+  unassigned_fragments: string[]
+}
+
+export interface DeepSeekResult {
+  scene: StructuredScene
+  warnings: string[]
+}
+
 export type CharacterRole = 'narrator' | 'character' | 'system'
 
 export interface Character {
@@ -157,3 +186,15 @@ export interface RenderJob {
 
 export type ApiProvider = 'deepseek' | 'gemini'
 export type ApiKeyStatus = 'not_configured' | 'configured' | 'valid' | 'invalid' | 'connection_error'
+
+export interface SceneMixResult {
+  output_path: string
+  duration_ms: number
+}
+
+export type ExportFormat = 'wav' | 'mp3'
+
+export interface TagsUpdate {
+  id: string
+  tags: string[]
+}

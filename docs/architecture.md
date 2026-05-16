@@ -173,7 +173,7 @@ UI → useProjects().create({title, rootPath, …})
   ← Project
 ```
 
-### 4.2 Importar guion y procesarlo (RF-09 a RF-16) — *parcial en MVP 1*
+### 4.2 Importar guion y procesarlo (RF-09 a RF-16)
 
 ```
 UI → useImport().importText(projectId, text)
@@ -182,17 +182,17 @@ UI → useImport().importText(projectId, text)
     ← raw_import row
   ← raw_import row
 
-UI → useImport().processWithDeepSeek(rawImportId)  ← TODO MVP 1
+UI → useImport().processWithDeepSeek(rawImportId)
   → invoke('process_import_with_deepseek')
     → DeepSeekService::structure_script(text)
     → validar JSON, comparar con texto original (RF-14, RF-44)
     → guardar processed_json en raw_imports
-  ← StructuredScene
+  ← StructuredScene + warnings
 
-UI → useImport().createScene(rawImportId)         ← TODO MVP 1
+UI → useImport().createScene(rawImportId)
   → invoke('create_scene_from_import')
-    → crear scene + characters + dialogue_nodes + tts_tags en transacción
-    → crear timeline base
+    → crear scene + characters + character_aliases + dialogue_nodes
+      (lista enlazada) + tts_tags + track "Voces" en transacción
   ← Scene
 ```
 
@@ -213,19 +213,63 @@ UI → useTts().playDialogue(nodeId)
   ← reproducir vía AudioPlayer
 ```
 
-### 4.4 Generar y exportar escena (RF-26, RF-28)
+### 4.4 Generar y exportar escena (RF-26, RF-27, RF-28)
 
 ```
-UI → useTts().generateScene(sceneId)
-  → RenderPlanner: identificar nodos sin audio vigente
-  → encolar render_jobs faltantes
-  → ejecutar en paralelo controlado
-  → invocar AudioMixer::render con el timeline
-    → decodificar fuentes con symphonia
-    → resamplear con rubato si fuera necesario
-    → aplicar volumen, fades, delays
-    → escribir WAV con hound (MP3 pendiente)
-  ← path al .wav exportado
+UI → useTts().playScene(sceneId)  // o useTimeline().render(sceneId, path, 'wav')
+  → invoke('play_scene_audio')  // o 'render_timeline'
+    → scene_mix_service::render_scene
+      → para cada dialogue_node enabled (orden):
+          tts_service::synthesize_dialogue(force=false)   // cache-first
+      → cargar timeline_tracks + timeline_events
+      → resolver file_paths de audio_assets / generated_audio
+      → audio_mixer::render_mix(VoiceTrack + AssetTrack[])
+          → symphonia: decodificar a f32 mono 24 kHz
+          → composición: voces secuenciales con delays,
+            assets absolutos por start_ms, mute/solo/volume/fade
+          → escribir WAV mono 16-bit con hound
+    ← SceneMixResult { output_path, duration_ms }
+  ← reproducir vía <audio src="convertFileSrc(path)">
+```
+
+### 4.5 Optimización de etiquetas TTS (RF-22)
+
+```
+UI → useTts().optimizeSceneTags(sceneId)
+  → invoke('optimize_scene_tts_tags')
+    → tts_optimization_service::optimize_scene_tags
+      → cargar nodos enabled + tags actuales + nombre de speaker
+      → DeepSeekService::optimize_tts_tags(blocks)
+          // prompt restrictivo: solo puede cambiar tags
+      → en transacción:
+          reemplazar dialogue_tts_tags por nodo
+          marcar generated_audio.status = 'outdated'  (RF-30)
+    ← Vec<TagsUpdate>
+  ← refrescar bloques + indicar audios desactualizados
+```
+
+### 4.6 Exportar / importar proyecto (RF-39, RF-40)
+
+```
+Export:
+UI → useProjects().export(id, targetPath)
+  → invoke('export_project')
+    → project_io_service::export_to_file
+      → build_snapshot: query a las 12 colecciones filtradas por project_id
+      → serde_json::to_string_pretty → archivo .json
+    ← string (path escrito)
+
+Import:
+UI → useProjects().import(sourcePath, targetRootPath)
+  → invoke('import_project')
+    → project_io_service::import_from_file
+      → leer + validar schema_version
+      → ProjectPaths::create_all + open_project_database (migra)
+      → restore_snapshot: insert en transacción con UUIDs nuevos
+        y FKs internas remapeadas
+    → AppState::open(targetRoot)
+    ← Project (el recién creado)
+  ← navegar a /projects/<id>
 ```
 
 ## 5. Seguridad
@@ -263,31 +307,64 @@ carpetas del proyecto abierto.
 | Schema (13/13)  | ✅ Migraciones + entidades + tipos TS                 |
 | AppState        | ✅ Funcional (single project + credentials)           |
 | CredentialSrv   | ✅ Set/delete/has/status. Test API real pendiente.    |
-| ProjectSrv      | 🟡 create, list, get. Update/delete/export/import: stub|
-| SceneSrv        | 🟡 create, list, get. Update/delete/reorder: stub     |
-| CharacterSrv    | 🟡 create, list, addAlias. Resto: stub                |
-| DialogueSrv     | 🟡 list, list_tags. CRUD/split/merge/reorder: stub    |
-| ImportSrv       | ✅ Texto y archivo `.txt`/`.md` persistidos           |
-| DeepSeekSrv     | 🟦 Modelos + prompt definidos. HTTP real: stub        |
-| GeminiTtsSrv    | 🟦 Modelos definidos. HTTP real: stub                 |
+| ProjectSrv      | ✅ create/list/get/update. Export/import vía `project_io_service`. Delete pendiente (decisión: con confirmación explícita). |
+| SceneSrv        | 🟡 create/list/get. Update/delete/reorder: stub       |
+| CharacterSrv    | 🟡 create/list/addAlias. Update/delete/voice: stub    |
+| DialogueSrv     | 🟡 list/list_tags. CRUD/split/merge/reorder: stub     |
+| ImportSrv       | ✅ Texto y archivo `.txt`/`.md` + DeepSeek + creación de escena en transacción |
+| DeepSeekSrv     | ✅ `structure_script` + `optimize_tts_tags` HTTP real |
+| GeminiTtsSrv    | ✅ `synthesize` HTTP real (header `x-goog-api-key`)   |
+| TtsSrv          | ✅ Orquesta cache `input_hash` + Gemini + WAV en disco|
 | RenderPlanner   | ✅ `input_hash` para caché (RF-30)                    |
-| AudioMixer      | 🟦 Tipos definidos. Render real: stub                 |
-| AssetSrv        | 🟡 list. Resto: stub                                  |
+| TtsOptimization | ✅ Reemplaza tags + invalida `generated_audio`        |
+| AudioMixer      | ✅ symphonia decoder + voice/asset tracks + WAV out   |
+| SceneMixSrv     | ✅ Orquesta TTS + timeline → mezcla final             |
+| TimelineSrv     | ✅ CRUD de tracks/eventos con `ensure_track_for_kind` |
+| AssetSrv        | ✅ Import/list/get/rename/delete con duración medida  |
+| ProjectIoSrv    | ✅ Export/import JSON con remapeo de IDs (ADR-0013)   |
 | Frontend pages  | ✅ Home, Settings, Project dashboard, Scene editor    |
-| Frontend comps  | ✅ 19 componentes stub (suficientes para MVP 1)       |
+| Frontend comps  | ✅ Componentes funcionales (import wizard, play, biblioteca, timeline) |
 
-Leyenda: ✅ funcional · 🟡 parcial · 🟦 firmas listas, lógica pendiente
+Leyenda: ✅ funcional · 🟡 parcial (suficiente para MVP 1) · 🟦 firmas listas
 
 ## 7. Roadmap por sprint
 
-| Sprint | Objetivo                                                  | RFs        |
-| ------ | --------------------------------------------------------- | ---------- |
-| 1      | Scaffold compilable (este sprint)                         | 01-02, 04, 06, 09-10 |
-| 2      | DeepSeek real + creación de escena desde import           | 11-16      |
-| 3      | Gemini TTS + caché + play por diálogo                     | 23-25, 30  |
-| 4      | Play global + delays + export WAV                         | 26-28, 35-37 |
-| 5      | Biblioteca de assets + SFX en timeline                    | 32-34, 36-38 |
-| 6      | Optimización TTS, validaciones avanzadas, export/import   | 22, 39-40  |
+MVP 1 cerrado. Sprints 1–6 entregados.
+
+| Sprint | Objetivo                                                  | RFs            | Estado |
+| ------ | --------------------------------------------------------- | -------------- | ------ |
+| 1      | Scaffold compilable                                       | 01-02, 04, 06, 09-10 | ✅ |
+| 2      | DeepSeek real + creación de escena desde import           | 11-16          | ✅ |
+| 3      | Gemini TTS + caché + play por diálogo                     | 23-25, 30, 31  | ✅ |
+| 4      | Play global + delays + export WAV                         | 26-28, 35, 37  | ✅ |
+| 5      | Biblioteca de assets + SFX/música/ambiente en timeline    | 32-34, 36, 38  | ✅ |
+| 6      | Optimización TTS + export/import de proyecto JSON         | 22, 39-40      | ✅ |
+
+### Deuda post-MVP
+
+Trabajo identificado que **no entra** en MVP 1 pero queda registrado para
+no perderse:
+
+- **Hardening de seguridad pre-release:** restringir `assetProtocol`
+  ([ADR-0011](decisions/0011-asset-protocol-scope-amplio.md)) y definir
+  CSP estricta.
+- **Export MP3** (actualmente `NotImplemented`): wrapper alrededor de
+  `lame` o `minimp3` encoder.
+- **Resample de alta calidad** con `rubato` cuando el mixer reciba
+  fuentes con sample rates muy variados
+  ([ADR-0012](decisions/0012-symphonia-decoder-resample-lineal.md)).
+- **Edición visual del timeline:** drag de eventos, sliders de
+  volumen/fade/loop, mute/solo desde la UI. Los comandos de backend
+  (`update_timeline_event`, `update_timeline_track`) ya están listos.
+- **Snapshot empaquetado con binarios** (zip con JSON + carpetas
+  `audio/`, `assets/`) — diseño en ADR separado cuando se priorice
+  ([ADR-0013](decisions/0013-export-import-snapshot-json-remap.md)).
+- **`delete_project`** con confirmación y borrado del directorio.
+- **CRUD completo** en SceneSrv/CharacterSrv/DialogueSrv (los stubs
+  bastan para MVP 1 pero el editor real necesita esos comandos).
+- **Validación literal del texto original (RF-44)** en `validate_result`:
+  hoy compara con `normalize_text` (whitespace collapse); endurecer a
+  diff a nivel palabra con marca de diferencias.
 
 ## 8. Glosario
 

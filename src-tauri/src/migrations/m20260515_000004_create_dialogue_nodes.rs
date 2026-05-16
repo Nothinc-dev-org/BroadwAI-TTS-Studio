@@ -60,11 +60,7 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(DialogueNodes::SceneId).text().not_null())
-                    .col(
-                        ColumnDef::new(DialogueNodes::CharacterId)
-                            .text()
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(DialogueNodes::CharacterId).text().not_null())
                     .col(ColumnDef::new(DialogueNodes::PreviousId).text())
                     .col(ColumnDef::new(DialogueNodes::NextId).text())
                     .col(

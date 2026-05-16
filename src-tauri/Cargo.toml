@@ -15,7 +15,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # Tauri
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-shell = "2"
@@ -59,6 +59,7 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 # Hashing para caché de audio
 sha2 = "0.10"
 hex = "0.4"
+base64 = "0.22"
 
 # Logging
 tracing = "0.1"

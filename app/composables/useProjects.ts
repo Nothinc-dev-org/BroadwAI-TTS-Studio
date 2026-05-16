@@ -26,13 +26,20 @@ export function useProjects() {
       title?: string
       description?: string
       language?: string
-    }) => invoke<void>('update_project', params),
+    }) =>
+      invoke<Project>('update_project', {
+        id: params.id,
+        title: params.title ?? null,
+        description: params.description ?? null,
+        language: params.language ?? null,
+      }),
 
     remove: (id: string) => invoke<void>('delete_project', { id }),
 
     export: (id: string, targetPath: string) =>
-      invoke<void>('export_project', { id, targetPath }),
+      invoke<string>('export_project', { id, targetPath }),
 
-    import: (sourcePath: string) => invoke<void>('import_project', { sourcePath }),
+    import: (sourcePath: string, targetRootPath: string) =>
+      invoke<Project>('import_project', { sourcePath, targetRootPath }),
   }
 }

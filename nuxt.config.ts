@@ -39,7 +39,6 @@ export default defineNuxtConfig({
     envPrefix: ['VITE_', 'TAURI_ENV_*'],
     server: {
       strictPort: true,
-      host: host || false,
       hmr: host
         ? { protocol: 'ws', host, port: 1421 }
         : undefined,

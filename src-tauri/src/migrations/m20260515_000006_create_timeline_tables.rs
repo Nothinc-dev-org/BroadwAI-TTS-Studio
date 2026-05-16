@@ -75,11 +75,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(TimelineEvents::DialogueNodeId).text())
                     .col(ColumnDef::new(TimelineEvents::AudioAssetId).text())
                     .col(ColumnDef::new(TimelineEvents::GeneratedAudioId).text())
-                    .col(
-                        ColumnDef::new(TimelineEvents::StartMs)
-                            .integer()
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(TimelineEvents::StartMs).integer().not_null())
                     .col(ColumnDef::new(TimelineEvents::DurationMs).integer())
                     .col(
                         ColumnDef::new(TimelineEvents::OffsetMs)

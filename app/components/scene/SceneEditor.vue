@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import type { Character, DialogueNode, Scene } from '~/types/domain'
+import type { Character, DialogueNode, GeneratedAudio, Scene } from '~/types/domain'
 
 defineProps<{
   scene: Scene
   dialogues: DialogueNode[]
   characters: Character[]
+  audiosByNode?: Record<string, GeneratedAudio>
+}>()
+
+defineEmits<{
+  audioGenerated: [audio: GeneratedAudio]
 }>()
 </script>
 
@@ -17,6 +22,11 @@ defineProps<{
       </UButton>
     </header>
 
-    <DialogueList :dialogues="dialogues" :characters="characters" />
+    <DialogueList
+      :dialogues="dialogues"
+      :characters="characters"
+      :audios-by-node="audiosByNode"
+      @audio-generated="(audio: GeneratedAudio) => $emit('audioGenerated', audio)"
+    />
   </section>
 </template>

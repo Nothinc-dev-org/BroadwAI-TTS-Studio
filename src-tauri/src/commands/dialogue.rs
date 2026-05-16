@@ -43,10 +43,7 @@ pub async fn update_dialogue_node(
 }
 
 #[tauri::command]
-pub async fn delete_dialogue_node(
-    _state: State<'_, AppState>,
-    _id: String,
-) -> AppResult<()> {
+pub async fn delete_dialogue_node(_state: State<'_, AppState>, _id: String) -> AppResult<()> {
     Err(AppError::NotImplemented("delete_dialogue_node"))
 }
 

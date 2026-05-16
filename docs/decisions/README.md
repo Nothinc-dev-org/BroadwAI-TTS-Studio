@@ -48,3 +48,6 @@ siguiente número correlativo.
 | [0008](0008-input-hash-determinista.md) | Caché TTS por input_hash determinístico | Aceptada |
 | [0009](0009-error-unificado-serializable.md) | AppError unificado y serializable | Aceptada |
 | [0010](0010-componentes-sin-path-prefix.md) | Auto-import de componentes sin path prefix | Aceptada |
+| [0011](0011-asset-protocol-scope-amplio.md) | `assetProtocol` con scope amplio durante el MVP | Aceptada |
+| [0012](0012-symphonia-decoder-resample-lineal.md) | symphonia + resample lineal en el mixer | Aceptada |
+| [0013](0013-export-import-snapshot-json-remap.md) | Export/import: snapshot JSON con remapeo de IDs | Aceptada |

@@ -1,3 +1,5 @@
+import type { DeepSeekResult, Scene } from '~/types/domain'
+
 interface RawImport {
   id: string
   project_id: string
@@ -20,10 +22,10 @@ export function useImport() {
     importFile: (projectId: string, filePath: string) =>
       invoke<RawImport>('import_file', { projectId, filePath }),
     processWithDeepSeek: (rawImportId: string) =>
-      invoke<void>('process_import_with_deepseek', { rawImportId }),
+      invoke<DeepSeekResult>('process_import_with_deepseek', { rawImportId }),
     validate: (rawImportId: string) =>
-      invoke<void>('validate_import_result', { rawImportId }),
+      invoke<DeepSeekResult>('validate_import_result', { rawImportId }),
     createScene: (rawImportId: string) =>
-      invoke<void>('create_scene_from_import', { rawImportId }),
+      invoke<Scene>('create_scene_from_import', { rawImportId }),
   }
 }

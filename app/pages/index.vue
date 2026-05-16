@@ -47,6 +47,31 @@ async function openExisting() {
   }
 }
 
+const importing = ref(false)
+
+async function importProject() {
+  error.value = null
+  const sourcePath = await openDialog({
+    multiple: false,
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+  })
+  if (typeof sourcePath !== 'string') return
+  const targetRoot = await openDialog({ directory: true, multiple: false })
+  if (typeof targetRoot !== 'string') return
+  importing.value = true
+  try {
+    const project = await projectsApi.import(sourcePath, targetRoot)
+    await loadProjects()
+    await navigateTo(`/projects/${project.id}`)
+  }
+  catch (err) {
+    error.value = String(err)
+  }
+  finally {
+    importing.value = false
+  }
+}
+
 const newProjectForm = ref({
   title: '',
   description: '',
@@ -83,6 +108,14 @@ onMounted(loadProjects)
         <p class="text-sm text-muted">Crea o abre un proyecto local para empezar.</p>
       </div>
       <div class="flex gap-2">
+        <UButton
+          icon="i-lucide-package-open"
+          variant="ghost"
+          :loading="importing"
+          @click="importProject"
+        >
+          Importar JSON
+        </UButton>
         <UButton icon="i-lucide-folder-open" variant="soft" @click="openExisting">
           Abrir proyecto
         </UButton>

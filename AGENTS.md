@@ -136,16 +136,32 @@ Olvidar el paso 4 = el frontend recibe `Error: command not found`.
 
 ## Estado actual
 
-**Sprint 1 entregado:** scaffold MVP 1 (este commit/sesión).
+**MVP 1 cerrado.** Sprints 1 a 6 entregados:
 
-- Estructura completa de archivos compila (`cargo check` ✅, `bun install` ✅).
-- 13 tablas creadas vía 8 migraciones.
-- ~50 comandos Tauri registrados; ~15 funcionales (proyecto, escena,
-  personaje básico, importación raw, credenciales).
-- ~35 comandos devuelven `AppError::NotImplemented` con firma final.
+| Sprint | Foco                                                       | Estado |
+| ------ | ---------------------------------------------------------- | ------ |
+| 1      | Scaffold compilable                                        | ✅     |
+| 2      | DeepSeek real + creación de escena desde import (RF-11–16) | ✅     |
+| 3      | Gemini TTS + caché por `input_hash` + play por diálogo     | ✅     |
+| 4      | Play global + delays + export WAV                          | ✅     |
+| 5      | Biblioteca de assets + SFX/música/ambiente en timeline     | ✅     |
+| 6      | Optimización TTS + export/import de proyecto en JSON       | ✅     |
 
-**Próximo:** RF-11 a RF-16 (procesamiento real con DeepSeek y creación de
-escena desde importación).
+Detalles por capa: ver [`docs/architecture.md`](docs/architecture.md) §6.
+
+**Deuda explícita post-MVP** (no bloquea release pero está identificada):
+
+- Restringir `assetProtocol` al root del proyecto abierto y definir CSP
+  estricta antes de release ([ADR-0011](docs/decisions/0011-asset-protocol-scope-amplio.md)).
+- Export MP3 (`commands::timeline::render_timeline` con `format="mp3"`
+  devuelve `NotImplemented`).
+- Resample de alta calidad con `rubato` cuando entren fuentes con sample
+  rates muy variados ([ADR-0012](docs/decisions/0012-symphonia-decoder-resample-lineal.md)).
+- Edición visual del timeline (drag de eventos, sliders de volumen/fade
+  por evento) — el backend ya tiene todos los comandos para hacerlo.
+- Empaquetado del export con binarios incluidos
+  ([ADR-0013](docs/decisions/0013-export-import-snapshot-json-remap.md)).
+- `delete_project` con confirmación explícita.
 
 ## Comandos útiles
 
@@ -171,3 +187,6 @@ bun run typecheck
   Para producción seguimos generando estáticos vía `bun run generate`
   (`tauri.conf.json::beforeBuildCommand`). Cuando se publique el fix upstream,
   puede revertirse a `ssr: false` para evitar el overhead de prerender en dev.
+- **`assetProtocol` con scope `["**"]`:** activo en MVP para que el WebView
+  pueda reproducir archivos locales sin pasar por IPC. Tiene que restringirse
+  pre-release; ver [ADR-0011](docs/decisions/0011-asset-protocol-scope-amplio.md).

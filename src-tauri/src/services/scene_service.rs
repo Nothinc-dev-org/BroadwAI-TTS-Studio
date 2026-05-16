@@ -1,6 +1,8 @@
 //! SceneService — CRUD de escenas (RF-04, RF-05).
 
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, Set};
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, Set,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::entities::scene;

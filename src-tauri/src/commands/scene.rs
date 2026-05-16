@@ -27,10 +27,7 @@ pub async fn create_scene(
 }
 
 #[tauri::command]
-pub async fn get_scene(
-    state: State<'_, AppState>,
-    id: String,
-) -> AppResult<Option<scene::Model>> {
+pub async fn get_scene(state: State<'_, AppState>, id: String) -> AppResult<Option<scene::Model>> {
     let current = state.current().await?;
     scene_service::get(&current.db, &id).await
 }

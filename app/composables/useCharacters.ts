@@ -32,7 +32,13 @@ export function useCharacters() {
       role?: string
       description?: string
       color?: string
-    }) => invoke<void>('update_character', params),
+    }) => invoke<void>('update_character', {
+      id: params.id,
+      name: params.name ?? null,
+      role: params.role ?? null,
+      description: params.description ?? null,
+      color: params.color ?? null,
+    }),
     remove: (id: string) => invoke<void>('delete_character', { id }),
     addAlias: (characterId: string, alias: string) =>
       invoke<CharacterAlias>('add_character_alias', { characterId, alias }),

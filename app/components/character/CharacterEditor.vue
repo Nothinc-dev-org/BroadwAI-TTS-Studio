@@ -3,6 +3,32 @@ import type { Character } from '~/types/domain'
 
 const model = defineModel<Partial<Character>>({ required: true })
 const emit = defineEmits<{ submit: [] }>()
+
+const voiceProvider = computed({
+  get: () => model.value.voice_provider ?? undefined,
+  set: value => {
+    model.value.voice_provider = value ?? null
+  },
+})
+
+const voiceId = computed({
+  get: () => model.value.voice_id ?? undefined,
+  set: value => {
+    model.value.voice_id = value ?? null
+  },
+})
+
+const roleLabels: Record<string, string> = {
+  narrator: 'Narrador',
+  character: 'Personaje',
+  system: 'Sistema',
+}
+
+const voiceSampleText = computed(() => [
+  model.value.name?.trim(),
+  model.value.role ? roleLabels[model.value.role] ?? model.value.role : undefined,
+  model.value.description?.trim(),
+].filter(Boolean).join('. '))
 </script>
 
 <template>
@@ -27,7 +53,7 @@ const emit = defineEmits<{ submit: [] }>()
     <UFormField label="Color">
       <UInput v-model="model.color" class="w-full" type="color" />
     </UFormField>
-    <VoiceSelector v-model:voice-id="model.voice_id" v-model:provider="model.voice_provider" />
+    <VoiceSelector v-model:voice-id="voiceId" v-model:provider="voiceProvider" :sample-text="voiceSampleText" />
     <slot name="actions" />
   </UForm>
 </template>

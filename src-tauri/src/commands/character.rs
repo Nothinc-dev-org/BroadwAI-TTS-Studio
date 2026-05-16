@@ -45,21 +45,30 @@ pub async fn list_characters(
 
 #[tauri::command]
 pub async fn update_character(
-    _state: State<'_, AppState>,
-    _id: String,
-    _name: Option<String>,
-    _role: Option<String>,
-    _description: Option<String>,
-    _color: Option<String>,
+    state: State<'_, AppState>,
+    id: String,
+    name: Option<String>,
+    role: Option<String>,
+    description: Option<String>,
+    color: Option<String>,
 ) -> AppResult<()> {
-    Err(AppError::NotImplemented("update_character"))
+    let current = state.current().await?;
+    character_service::update(
+        &current.db,
+        &id,
+        character_service::UpdateCharacterInput {
+            name,
+            role,
+            description,
+            color,
+        },
+    )
+    .await?;
+    Ok(())
 }
 
 #[tauri::command]
-pub async fn delete_character(
-    _state: State<'_, AppState>,
-    _id: String,
-) -> AppResult<()> {
+pub async fn delete_character(_state: State<'_, AppState>, _id: String) -> AppResult<()> {
     Err(AppError::NotImplemented("delete_character"))
 }
 
@@ -83,11 +92,20 @@ pub async fn remove_character_alias(
 
 #[tauri::command]
 pub async fn assign_character_voice(
-    _state: State<'_, AppState>,
-    _character_id: String,
-    _voice_provider: String,
-    _voice_id: String,
-    _default_style_prompt: Option<String>,
+    state: State<'_, AppState>,
+    character_id: String,
+    voice_provider: String,
+    voice_id: String,
+    default_style_prompt: Option<String>,
 ) -> AppResult<()> {
-    Err(AppError::NotImplemented("assign_character_voice"))
+    let current = state.current().await?;
+    character_service::assign_voice(
+        &current.db,
+        &character_id,
+        &voice_provider,
+        &voice_id,
+        default_style_prompt,
+    )
+    .await?;
+    Ok(())
 }
