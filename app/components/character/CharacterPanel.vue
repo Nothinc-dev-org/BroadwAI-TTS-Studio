@@ -87,37 +87,29 @@ async function saveCharacter() {
       <UButton size="xs" variant="soft" icon="i-lucide-plus">Nuevo</UButton>
     </header>
 
-    <ul v-if="characters.length" class="space-y-1">
-      <li
+    <div v-if="characters.length" class="grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));">
+      <div
         v-for="character in characters"
         :key="character.id"
         :id="`char-${character.id}`"
-        class="flex items-center justify-between rounded-md border border-default px-3 py-2"
+        class="flex items-start justify-between gap-2 rounded-md border border-default p-3"
       >
-        <div class="flex items-center gap-2">
-          <span
-            class="inline-block size-2 rounded-full"
-            :style="{ background: character.color ?? '#94a3b8' }"
-          />
-          <div>
-            <div class="text-sm font-medium">{{ character.name }}</div>
-            <div class="text-xs text-muted">{{ character.role }}</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-1">
-          <UBadge v-if="character.voice_id" color="primary" variant="subtle" size="sm">
+        <div class="min-w-0">
+          <div class="truncate text-sm font-medium">{{ character.name }}</div>
+          <div class="truncate text-xs text-muted">{{ character.role }}</div>
+          <UBadge v-if="character.voice_id" color="primary" variant="subtle" size="sm" class="mt-1 truncate">
             {{ character.voice_id }}
           </UBadge>
-          <UButton
-            size="xs"
-            variant="ghost"
-            icon="i-lucide-pencil"
-            title="Editar personaje"
-            @click="openEditor(character)"
-          />
         </div>
-      </li>
-    </ul>
+        <UButton
+          size="xs"
+          variant="ghost"
+          icon="i-lucide-pencil"
+          title="Editar personaje"
+          @click="openEditor(character)"
+        />
+      </div>
+    </div>
     <div v-else class="rounded-md border border-dashed border-default p-4 text-center text-xs text-muted">
       Aún no hay personajes.
     </div>

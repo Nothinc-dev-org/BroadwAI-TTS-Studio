@@ -11,6 +11,7 @@ const props = defineProps<{
 defineEmits<{
   audioGenerated: [audio: GeneratedAudio]
   toggleDialogueSelection: [dialogueId: string]
+  dialogueUpdated: []
 }>()
 
 function audioFor(nodeId: string): GeneratedAudio | null {
@@ -35,6 +36,7 @@ function isSelected(nodeId: string): boolean {
         :selected="isSelected(dialogue.id)"
         @generated="(audio: GeneratedAudio) => $emit('audioGenerated', audio)"
         @toggle-selected="$emit('toggleDialogueSelection', dialogue.id)"
+        @character-changed="$emit('dialogueUpdated')"
       />
     </li>
   </ol>

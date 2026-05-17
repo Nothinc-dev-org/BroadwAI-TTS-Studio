@@ -43,18 +43,30 @@ pub async fn list_scenes(
 
 #[tauri::command]
 pub async fn update_scene(
-    _state: State<'_, AppState>,
-    _id: String,
-    _title: Option<String>,
-    _description: Option<String>,
-    _order_index: Option<i32>,
+    state: State<'_, AppState>,
+    id: String,
+    title: Option<String>,
+    description: Option<String>,
+    order_index: Option<i32>,
 ) -> AppResult<()> {
-    Err(AppError::NotImplemented("update_scene"))
+    let current = state.current().await?;
+    scene_service::update(
+        &current.db,
+        &id,
+        scene_service::UpdateSceneInput {
+            title,
+            description,
+            order_index,
+        },
+    )
+    .await?;
+    Ok(())
 }
 
 #[tauri::command]
-pub async fn delete_scene(_state: State<'_, AppState>, _id: String) -> AppResult<()> {
-    Err(AppError::NotImplemented("delete_scene"))
+pub async fn delete_scene(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    let current = state.current().await?;
+    scene_service::delete(&current.db, &id).await
 }
 
 #[tauri::command]

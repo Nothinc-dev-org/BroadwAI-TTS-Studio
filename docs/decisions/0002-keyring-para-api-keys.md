@@ -16,8 +16,15 @@ al sistema operativo.
 
 ## Decisión
 
-Usar el crate **`keyring` 3.x** con features nativas
-(`apple-native`, `windows-native`, `linux-native`).
+Usar el crate **`keyring` 3.x** con backend persistente por sistema operativo:
+
+- macOS/iOS: `apple-native` (Keychain).
+- Windows: `windows-native` (Credential Manager / DPAPI).
+- Linux/BSD: `sync-secret-service` + `crypto-rust` (Secret Service/libsecret).
+
+No usar `linux-native` para esta aplicación: en `keyring` 3.x ese feature
+selecciona `keyutils`, que funciona como cache en memoria del kernel y se limpia
+al reiniciar el sistema.
 
 - Servicio: `ai.broadwai.tts-studio`.
 - Cuentas: `deepseek`, `gemini` (definidas en `Provider::keyring_account`).
@@ -29,7 +36,8 @@ Usar el crate **`keyring` 3.x** con features nativas
 
 Detalles operativos:
 
-- Linux: libsecret (gnome-keyring / kwallet). Requiere `libsecret-1-dev` en build.
+- Linux: Secret Service/libsecret (gnome-keyring / kwallet). Requiere
+  `libsecret-1-dev` en build y un agente de keyring activo/desbloqueado en runtime.
 - macOS: Keychain.
 - Windows: Credential Manager (DPAPI).
 

@@ -23,7 +23,7 @@ Estado actual: **scaffold MVP 1**. La base compila, las migraciones cubren el mo
 
 - Rust 1.93+ con `cargo`
 - bun 1.3+
-- En Linux: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `libsoup-3.0-dev`, `libsecret-1-dev`
+- En Linux: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `libsoup-3.0-dev`, `libsecret-1-dev` y un agente Secret Service activo (gnome-keyring/KWallet)
 
 ## Desarrollo
 
@@ -52,12 +52,10 @@ src-tauri/              # Tauri 2 + Rust
 
 Las API keys (DeepSeek, Gemini) **nunca** se persisten en SQLite ni en `localStorage`. Se almacenan en el keyring del sistema operativo a través del `CredentialService`. El backend Rust es el único que las lee y las inyecta en las llamadas HTTP a los proveedores.
 
-Para desarrollo local, define las claves a través de la pantalla de Configuración. **No** commitees archivos `.env`.
+En Linux se usa Secret Service/libsecret para que las claves persistan tras reiniciar. El backend `keyutils` de `keyring` no se usa porque solo actúa como cache en memoria del kernel.
+
 
 ## Roadmap
 
 Ver `Requerimiento.md` para el detalle completo de RFs, RNFs, MVPs y criterios de aceptación.
 
-## Licencia
-
-Pendiente de definir.

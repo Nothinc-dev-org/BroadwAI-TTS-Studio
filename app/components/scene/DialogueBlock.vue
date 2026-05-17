@@ -11,9 +11,14 @@ const props = defineProps<{
 const emit = defineEmits<{
   generated: [audio: GeneratedAudio]
   toggleSelected: []
+  characterChanged: []
 }>()
 
 const tts = useTts()
+const dialoguesApi = useDialogueNodes()
+
+const selectorOpen = ref(false)
+const savingCharacter = ref(false)
 
 const character = computed(() =>
   props.characters.find(c => c.id === props.dialogue.character_id),
@@ -155,6 +160,31 @@ function onAudioError() {
   lastError.value = `No se pudo cargar el audio generado. Código: ${code}. ${message}. URL: ${audio?.currentSrc || audioSrc.value || 'desconocida'}`
 }
 
+async function onChangeCharacter(characterId: string) {
+  console.log('[DialogueBlock] onChangeCharacter', characterId, 'current', props.dialogue.character_id)
+  if (characterId === props.dialogue.character_id) {
+    emit('characterChanged')
+    return
+  }
+  savingCharacter.value = true
+  lastError.value = null
+  try {
+    await dialoguesApi.update({
+      id: props.dialogue.id,
+      characterId,
+    })
+    console.log('[DialogueBlock] update success')
+    emit('characterChanged')
+  }
+  catch (err) {
+    console.error('[DialogueBlock] update failed', err)
+    lastError.value = String(err)
+  }
+  finally {
+    savingCharacter.value = false
+  }
+}
+
 function onBlockClick(event: MouseEvent) {
   if (!event.ctrlKey) return
   const target = event.target as HTMLElement | null
@@ -181,6 +211,14 @@ onBeforeUnmount(revokeAudioBlob)
           class="font-medium hover:underline"
         >{{ speaker }}</a>
         <span v-else class="font-medium">{{ speaker }}</span>
+        <UButton
+          size="xs"
+          variant="ghost"
+          icon="i-lucide-pencil"
+          title="Cambiar personaje"
+          :loading="savingCharacter"
+          @click="selectorOpen = true"
+        />
         <UBadge :color="statusMeta[status].color" variant="subtle" size="xs">
           {{ statusMeta[status].label }}
         </UBadge>
@@ -219,6 +257,13 @@ onBeforeUnmount(revokeAudioBlob)
         @pause="isPlaying = false"
         @ended="isPlaying = false"
         @error="onAudioError"
+      />
+
+      <CharacterSelectorModal
+        v-model="selectorOpen"
+        :characters="characters"
+        :selected-character-id="dialogue.character_id"
+        @confirm="onChangeCharacter"
       />
   </article>
 </template>

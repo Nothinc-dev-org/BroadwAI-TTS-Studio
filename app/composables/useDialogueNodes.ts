@@ -13,8 +13,28 @@ export function useDialogueNodes() {
       text: string
       orderIndex: number
     }) => invoke<DialogueNode>('create_dialogue_node', params),
-    update: (params: Partial<DialogueNode> & { id: string }) =>
-      invoke<void>('update_dialogue_node', params),
+    update: (params: {
+      id: string
+      text?: string | null
+      characterId?: string | null
+      kind?: string | null
+      emotion?: string | null
+      intensity?: number | null
+      isEnabled?: boolean | null
+      beforeDelayMs?: number | null
+      afterDelayMs?: number | null
+    }) =>
+      invoke<void>('update_dialogue_node', {
+        id: params.id,
+        text: params.text ?? null,
+        characterId: params.characterId ?? null,
+        kind: params.kind ?? null,
+        emotion: params.emotion ?? null,
+        intensity: params.intensity ?? null,
+        isEnabled: params.isEnabled ?? null,
+        beforeDelayMs: params.beforeDelayMs ?? null,
+        afterDelayMs: params.afterDelayMs ?? null,
+      }),
     remove: (id: string) => invoke<void>('delete_dialogue_node', { id }),
     split: (id: string, splitAt: number) =>
       invoke<void>('split_dialogue_node', { id, splitAt }),

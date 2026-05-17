@@ -28,18 +28,32 @@ pub async fn list_dialogue_nodes(
 
 #[tauri::command]
 pub async fn update_dialogue_node(
-    _state: State<'_, AppState>,
-    _id: String,
-    _text: Option<String>,
-    _character_id: Option<String>,
-    _kind: Option<String>,
-    _emotion: Option<String>,
-    _intensity: Option<i32>,
-    _is_enabled: Option<bool>,
-    _before_delay_ms: Option<i32>,
-    _after_delay_ms: Option<i32>,
+    state: State<'_, AppState>,
+    id: String,
+    text: Option<String>,
+    character_id: Option<String>,
+    kind: Option<String>,
+    emotion: Option<String>,
+    intensity: Option<i32>,
+    is_enabled: Option<bool>,
+    before_delay_ms: Option<i32>,
+    after_delay_ms: Option<i32>,
 ) -> AppResult<()> {
-    Err(AppError::NotImplemented("update_dialogue_node"))
+    let current = state.current().await?;
+    dialogue_service::update(
+        &current.db,
+        &id,
+        text,
+        character_id,
+        kind,
+        emotion,
+        intensity,
+        is_enabled,
+        before_delay_ms,
+        after_delay_ms,
+    )
+    .await?;
+    Ok(())
 }
 
 #[tauri::command]

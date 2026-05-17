@@ -279,6 +279,8 @@ UI → useProjects().import(sourcePath, targetRootPath)
 Almacenamiento: keyring del SO bajo el servicio `ai.broadwai.tts-studio` con
 cuentas `deepseek` y `gemini`. Ver
 [`decisions/0002-keyring-para-api-keys.md`](decisions/0002-keyring-para-api-keys.md).
+En Linux el backend debe ser Secret Service/libsecret; `keyring` con
+`linux-native` usa `keyutils`, que no persiste tras reiniciar.
 
 Reglas de manejo:
 

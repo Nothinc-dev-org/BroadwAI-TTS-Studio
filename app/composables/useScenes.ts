@@ -23,7 +23,12 @@ export function useScenes() {
       title?: string
       description?: string
       orderIndex?: number
-    }) => invoke<void>('update_scene', params),
+    }) => invoke<void>('update_scene', {
+      id: params.id,
+      title: params.title ?? null,
+      description: params.description ?? null,
+      orderIndex: params.orderIndex ?? null,
+    }),
     remove: (id: string) => invoke<void>('delete_scene', { id }),
     reorder: (projectId: string, orderedIds: string[]) =>
       invoke<void>('reorder_scenes', { projectId, orderedIds }),
